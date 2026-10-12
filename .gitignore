@@ -1,0 +1,19 @@
+# Données sources (BEAC/FMI, usage interne -- non versionnées)
+data/
+!data/README.md
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Divers
+*.tmp
