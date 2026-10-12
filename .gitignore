@@ -17,3 +17,6 @@ venv/
 
 # Divers
 *.tmp
+
+# Brouillons et scripts remplacés (non publiés)
+archive/

@@ -1,59 +1,58 @@
-# BEAC -- Analyse du taux de rétention des exportations pétrolières (CEMAC)
+# BEAC : rétention de la valeur des exportations dans les économies pétrolières
 
-Analyse de la balance des paiements des économies exportatrices de pétrole, construite dans le cadre d'un stage à la Banque des États de l'Afrique Centrale (BEAC), Service de la Balance des Paiements. L'étude mesure la part de la valeur exportée réellement retenue par l'économie nationale (taux de rétention des exportations, TRE), positionne les six pays de la CEMAC dans une typologie mondiale, et identifie par quel canal chacun perd sa valeur exportée (clustering multivarié).
+Analyse de la balance des paiements réalisée pendant un stage à la Banque des États de l'Afrique Centrale (BEAC), Service de la Balance des Paiements (août à octobre 2026). L'étude mesure la part de la valeur des exportations de biens que les grands exportateurs de pétrole conservent réellement, identifie les leviers qui permettent de progresser d'un niveau de rétention à l'autre, et positionne les six États de la CEMAC.
 
-## Méthodologie
+## Question et hypothèses
 
-Formule complète du taux de rétention :
+Quelle part de la valeur de leurs exportations les économies exportatrices de pétrole parviennent-elles à conserver, et par quels leviers peuvent-elles passer d'une rétention faible à une rétention élevée ?
+
+- **H1** : la rétention s'organise en niveaux distincts.
+- **H2** : un chemin de progression entre ces niveaux existe, avec des leviers identifiables.
+- **H3** : les six États de la CEMAC peuvent être situés dans cette typologie (le Cameroun sert de référent).
+
+## Méthode
+
+Indicateurs, tous rapportés aux recettes d'exportation de biens :
 
 ```
-TC  = Crédit biens / Débit biens x 100        (taux de couverture des biens)
-TM  = Débit biens / Crédit biens x 100        (taux de couverture des importations)
-TAS = max(0, -solde services) / Crédit biens x 100
-TFR = max(0, -solde revenu primaire) / Crédit biens x 100
+TM  = Débit des biens / Crédit des biens x 100
+TAS = max(0, -Solde des services) / Crédit des biens x 100
+TFR = max(0, -Solde du revenu primaire) / Crédit des biens x 100
 TRE = 100 - TM - TAS - TFR
 ```
 
-La typologie retient des **bandes absolues et fixes** (CRITIQUE < 0 %, FAIBLE 0-20 %, NORMAL 20-50 %, BON ≥ 50 %), appliquées **année par année** sur six années cibles (2014, 2015, 2016, 2019, 2020, 2021 -- encadrant le contre-choc pétrolier de 2015-2016 et la crise COVID de 2019-2021), plutôt qu'un calibrage statistique relatif (k-means), qui s'est révélé trompeur sur ce panel (il désigne toujours le tiers supérieur de l'échantillon comme « bon », même quand ce tiers reste faible en valeur absolue).
-
-Le détail complet de la démarche, des résultats et de leur discussion se trouve dans `rapport/rapport_bdp.tex`.
+- **Panel** : 41 pays du top 50 mondial des exportateurs de pétrole, ayant des données FMI complètes sur six années cibles (2014, 2015, 2016, 2019, 2020, 2021).
+- **Cinq bandes absolues** : TRÈS CRITIQUE (< -78 %), CRITIQUE (-78 à 0 %), FAIBLE (0 à 16 %), NORMAL (16 à 35 %), BON (>= 35 %). Le seuil 0 découle de la définition ; les autres sont les ruptures naturelles mesurées séparément sur les taux négatifs et positifs.
+- **Lecture année par année**, matrice de transition entre années cibles et décomposition de chaque montée de bande par levier.
+- **Profils de fuite** : k-moyennes sur TM, TAS et TFR (nombre de classes choisi par le score de silhouette), représentées par ACP.
+- **Score relatif** : position de chaque pays CEMAC par rapport à la moyenne du panel la même année.
 
 ## Scripts
 
 | Script | Rôle |
 |---|---|
-| `scripts/extraire_bdp_cemac_brut.py` | Extraction des postes Biens/Services/Revenu primaire depuis les fichiers BDP officiels bruts de la BEAC (CEMAC, 2020-2023) |
-| `scripts/extraire_tre_brut_fmi.py` | Extraction des mêmes postes depuis les fichiers sources bruts du FMI (format SDMX `IMF.STA:BOP`), panel mondial de 40 pays exportateurs de pétrole, 6 années cibles |
-| `scripts/analyser_tre_global_cemac.py` | Calcul du TRE (formule complète), typologie par bandes absolues, positionnement des 6 pays CEMAC, génération des graphiques |
-| `scripts/clustering_multicritere_tcm_tas_tfr.py` | Clustering multivarié (TC, TM, TAS, TFR) des profils de fuite, projection ACP |
+| `scripts/extraire_bdp_cemac_brut.py` | Extraction des postes depuis les fichiers BDP officiels de la BEAC (2020 à 2023) |
+| `scripts/extraire_tre_brut_fmi.py` | Chargement des données FMI et BEAC, calcul des indicateurs et des bandes |
+| `scripts/analyse_typologie_trajectoires.py` | H1 et H2 : distribution, typologie par année, transitions, leviers |
+| `scripts/clustering_profils_fuite.py` | Profils de fuite : classification, ACP, parcours des pays CEMAC |
+| `scripts/positionnement_cemac.py` | H3 : trajectoires CEMAC, usage de la valeur exportée, leviers, score relatif |
+| `scripts/style_graphiques.py` | Charte graphique commune (palettes vérifiées) |
 
 ## Utilisation
 
 ```bash
 pip install -r requirements.txt
-```
-
-Placer les fichiers sources dans `data/` selon la structure décrite dans `data/README.md`, puis :
-
-```bash
 cd scripts
 python extraire_bdp_cemac_brut.py          # génère data/TRE_CEMAC_RECALCULE.csv
-python analyser_tre_global_cemac.py         # typologie + graphiques (figures/)
-python clustering_multicritere_tcm_tas_tfr.py  # clustering multivarié (figures/)
+python analyse_typologie_trajectoires.py   # figures H1 et H2
+python clustering_profils_fuite.py         # profils de fuite
+python positionnement_cemac.py             # positionnement de la CEMAC
 ```
 
-## Structure du dépôt
+Les figures sont écrites dans `figures/` et les résultats chiffrés dans `resultats/`. Les données sources ne sont pas versionnées : leur structure attendue est décrite dans `data/README.md`.
 
-```
-balance_de_paiement/
-|-- scripts/      Scripts d'extraction et d'analyse (voir ci-dessus)
-|-- rapport/       Rapport scientifique complet (LaTeX + bibliographie)
-|-- figures/       Graphiques générés par les scripts
-|-- notebooks/     Exploration initiale (Jupyter)
-|-- data/          Non versionné -- voir data/README.md
-```
+## Limites
 
-## Limites connues
-
-- Les six pays de la CEMAC n'ont pas tous une couverture FMI suffisante sur les années cibles : seul le Cameroun dispose de données exploitables dans cette source ; les cinq autres (Congo, Gabon, Guinée Équatoriale, Tchad, RCA) sont positionnés à partir des fichiers BEAC officiels (2020-2023 uniquement).
-- Le sous-compte « revenu primaire débité » est très incomplètement renseigné dans le panel FMI pour la plupart des pays hors CEMAC ; les valeurs de TRE qui en dérivent doivent se lire comme un plancher de fuite mesurable avec les données disponibles.
+- Pour le Gabon (2020 et 2021), la Guinée Équatoriale, le Tchad et la RCA, seules les années 2020 et 2021 sont disponibles parmi les années cibles (source BEAC).
+- La mesure du revenu primaire dépend de la qualité de déclaration des bénéfices et intérêts versés aux non-résidents.
+- Le TRE ne tient pas compte du revenu secondaire (transferts courants).
